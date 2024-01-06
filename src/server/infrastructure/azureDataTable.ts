@@ -1,15 +1,28 @@
-import { AzureNamedKeyCredential, TableClient, TableServiceClient } from "@azure/data-tables";
+import { AzureNamedKeyCredential, TableClient } from "@azure/data-tables";
 import { env } from "~/env";
 
-const credential = new AzureNamedKeyCredential(env.STORAGE_ACCOUNT_NAME, env.STORAGE_ACCOUNT_KEY);
-const azureDataTableUrl = `https://${env.STORAGE_ACCOUNT_NAME}.table.core.windows.net`
+type AzureTableSettings = { 
+  tableName:    string;
+  accountName:  string;
+  accountKey:   string;
+  accountUrl:   string;
+}
 
-type TableNames = 'fileShareStates';
-
-const buildTableClient = async (tableName: TableNames) => {
-  const fileSharesStateAzureTable = new TableClient(azureDataTableUrl, tableName, credential);
+const buildTableClient = async ({tableName, accountName, accountKey, accountUrl }: AzureTableSettings) => {
+  const fileSharesStateAzureTable = new TableClient(
+    accountUrl, 
+    tableName, 
+    new AzureNamedKeyCredential(accountName, accountKey)
+  );
   await fileSharesStateAzureTable.createTable();
   return fileSharesStateAzureTable;
 }
 
-const buildFileShareStatesTableClient = () => buildTableClient('fileShareStates');
+export type BuildTableClient = () => Promise<TableClient>;
+
+export const buildFileShareStatesTableClient = () => buildTableClient({
+  tableName: env.FILE_SHARE_STATES_TABLE_NAME, 
+  accountName: env.STORAGE_ACCOUNT_NAME,
+  accountKey: env.STORAGE_ACCOUNT_KEY,
+  accountUrl: `https://${env.STORAGE_ACCOUNT_NAME}.table.core.windows.net`,
+});

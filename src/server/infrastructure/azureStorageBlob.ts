@@ -1,4 +1,4 @@
-import { BlobServiceClient, ContainerClient, StorageSharedKeyCredential, BlobSASPermissions } from "@azure/storage-blob";
+import { BlobServiceClient, type ContainerClient, StorageSharedKeyCredential, BlobSASPermissions } from "@azure/storage-blob";
 import { env } from "~/env";
 
 const sharedKeyCredential = new StorageSharedKeyCredential(env.STORAGE_ACCOUNT_NAME, env.STORAGE_ACCOUNT_KEY);
@@ -7,13 +7,15 @@ const blobServiceClient = new BlobServiceClient(
   sharedKeyCredential
 );
 
-export const fileShareContainer = blobServiceClient.getContainerClient('file-share');
+export const fileShareContainer = blobServiceClient.getContainerClient(env.FILE_SHARE_CONTAINER_NAME);
+
 
 export const generateUploadUrlOnBlobStorage = (
   container: ContainerClient
 ) => async (
   filePath: string
 ) => {
+  await fileShareContainer.createIfNotExists();
   const expiresOn = new Date();
   expiresOn.setHours(expiresOn.getHours()+1)
   return await container
@@ -25,3 +27,5 @@ export const generateUploadUrlOnBlobStorage = (
       }),
     })
 }
+
+export type GenerateUploadUrl = (filePath: string) => Promise<string>;

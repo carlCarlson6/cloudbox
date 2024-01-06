@@ -1,4 +1,4 @@
-import { Theme } from '@radix-ui/themes';
+import { Box, Flex, Heading, Theme } from '@radix-ui/themes';
 import '@radix-ui/themes/styles.css';
 
 import { Inter } from "next/font/google";
@@ -22,9 +22,20 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <Theme>
-          {children}
+          <Box p={'4'}>
+              <Header />
+              <Flex direction={'column'} align={'center'} pt={'6'}>
+                {children}
+              </Flex>
+          </Box>
         </Theme>
       </body>
     </html>
   );
 }
+
+const Header = () => (<>
+  <Flex direction={'row'} justify={'between'} pl={'4'}>
+    <Heading>cloudbox.app</Heading>
+  </Flex>
+</>);

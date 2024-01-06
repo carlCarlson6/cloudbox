@@ -1,8 +1,19 @@
 "use server"
 
 import { fileShareContainer, generateUploadUrlOnBlobStorage } from "./infrastructure/azureStorageBlob"
-import { initFileShareUploadAction } from "./fileShare/initFileShareUploadAction"
+import { initFileShareUploadAction } from "./fileShare/initFileShareUpload.action"
+import { readFileShateStateOnAzureTable, upsertFileShareStateOnAzureTable } from "./fileShare/fileShareStateRepository"
+import { buildFileShareStatesTableClient, } from "./infrastructure/azureDataTable"
+import { completeFileShareAction } from "./fileShare/completeFileShare.action"
 
-export const initFileShareUpload = initFileShareUploadAction(
-  generateUploadUrlOnBlobStorage(fileShareContainer),
-)
+const upsertFileShareState = upsertFileShareStateOnAzureTable(buildFileShareStatesTableClient);
+
+export const initFileShareUpload = initFileShareUploadAction({
+  generateUploadUrl: generateUploadUrlOnBlobStorage(fileShareContainer),
+  upsertFileShareState,
+});
+
+export const completeFileShare = completeFileShareAction(
+  readFileShateStateOnAzureTable(buildFileShareStatesTableClient),
+  upsertFileShareState,
+);
