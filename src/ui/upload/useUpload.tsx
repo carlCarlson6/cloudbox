@@ -17,60 +17,47 @@ export type FileDataState =
   | { status: 'nothing'; }
 
 export const useUpload = () => {
-  const [fileData, setFileData] = useState<FileDataState>({ status: 'nothing' });
-  const {
-    openFilePicker, filesContent, errors, plainFiles,
-  } = useFilePicker({
-    multiple: false,
-    validators: [
-      new FileSizeValidator({ maxFileSize: 50 * 1024 * 1024 /* 50 MB */ }),
-    ]
-  });
+  const [file, setFile] = useState<File | null>(null);
+  const [owner, setOwner] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+  const [operationResult, setOperationResult] = useState()
 
-  useEffect(() => {
-    if (errors.length > 0) {
-      errors.at(0)?.name;
-      setFileData({ status: 'ERROR', message: errors.at(0)?.name ?? 'no-error-message' });
+  const canSend = !(!file || owner === ''); 
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.item(0);
+    if (!file) return;
+    setFile(file);
+  };
+  
+  const onClickUpload = async () => {
+    if (!file || owner === '') {
       return;
     }
-    if (filesContent.length <= 0 || plainFiles.length <= 0) {
-      return;
-    }
-
-    setFileData({
-      status:   'selected', name: filesContent.at(0)?.name ?? '',
-      size:     plainFiles.at(0)?.size ?? 0,
-      content:  filesContent.at(0)?.content ?? '',
-    });
-    return;
-
-  }, [filesContent, plainFiles, errors]);
-
-  return {
-    fileData,
-    openFilePicker,
-    onClickUpload: async () => {
-      if (fileData.status !== 'selected') {
-        return;
-      }
-      const owner = "carl@email.com"; // TODO - read value from user input
-      const {uploadUrl} = await initFileShareUpload({ owner, fileName: fileData.name });
-      
-      const result = await fetch(uploadUrl, {
+    setIsUploading(true);
+  
+    try {
+      const { uploadUrl, slug } = await initFileShareUpload({ owner: owner, fileName: file.name });
+      await fetch(uploadUrl, {
         method: 'PUT',
         headers: {
           'x-ms-blob-type': 'BlockBlob'
         },
-        body: filesContent.at(0)?.content ?? ''
-      })
-
-      console.log(`Upload of file completed`);
-      console.log(result);
-
-      /*await completeFileShare({fileShareId: {
-        slug,
-        owner
-      }});*/
+        body: await file.arrayBuffer(),
+      });
+      const { fileUrl, expiresOn } = await completeFileShare({fileShareId: { slug, owner: owner,}});
+      const 
+    } catch (error) {
+      return;
     }
+  }
+
+  return {
+    file,
+    owner, 
+    setOwner,
+    canSend,
+    handleFileChange,
+    onClickUpload,
   };
 };

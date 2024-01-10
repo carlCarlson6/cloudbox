@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { GenerateUploadUrl } from "../infrastructure/azureStorageBlob";
 import { generate } from "shortid";
-import type { UpsertFileShareState } from "./fileShareStateRepository";
+import type { UpsertFileShareState } from "./fileShareRepository";
 
 export const initFileShareUploadCommandSchema = z.object({
   owner: z.string().email(),

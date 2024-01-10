@@ -1,54 +1,72 @@
 "use client"
 
-import { Box, Button, Flex, IconButton, Text } from "@radix-ui/themes";
-import { match } from "ts-pattern";
+import { Box, Flex, IconButton, Text } from "@radix-ui/themes";
 import { useUpload } from "./useUpload";
 import { UploadIcon } from "@radix-ui/react-icons";
+import { match } from "ts-pattern";
+import { BarLoader } from "react-spinners";
+import { FILE } from "dns";
+import { SendFileForm } from "./SendFileForm";
 
 export const UploadFile = () => {
-  const {openFilePicker, fileData: file, onClickUpload} = useUpload();
+  const { onClickUpload, handleFileChange, owner, setOwner, file } = useUpload();
+
+  console.log(file);
 
   return (<>
     <Box 
       style={{
         boxShadow: '0 0 10px rgba(171, 189, 249, 0.4)',
-        borderRadius: '8%',
+        borderRadius: 'var(--radius-6)',
       }}
       p={'8'}
     >
       <Flex direction={'column'} justify={'center'} align={'center'} gap={'4'}>
-        {match(file)
-        .with({status: 'nothing'}, () => <>
-          <SelectFile openFilePicker={openFilePicker}/>
-        </>)
-        .with({status: 'ERROR'}, (error) => <>
-          <Text>{error.status}</Text>
-          <Text>{error.message}</Text>
-        </>)
-        .with({status: 'selected'}, (data) => <>
-          <Flex direction={'column'} justify={'center'} align={'center'} gap={'4'}>
-            <Text>{data.name}</Text>
-            <UploadFileButton upload={onClickUpload}/>
-          </Flex>
-        </>)  
-        .exhaustive()}
+        {match(uploadStatus)
+          .with({status: 'MISSING_DATA'}, () => <>
+            <SendFileForm 
+              file={file}
+              onFileSelect={handleFileChange}
+              ownerShip={{ email: owner, set: setOwner }}
+              upload={onClickUpload}
+              isuploading={false}
+            />  
+          </>)          
+          .with({status: 'UPLOADING'}, () => <>
+            <SendFileForm 
+              file={file}
+              onFileSelect={handleFileChange}
+              ownerShip={{ email: owner, set: setOwner }}
+              upload={onClickUpload}
+              isuploading={true}
+            />            
+          </>)
+          .with({status: 'UPLOAD_COMPLETED'}, state => <>
+            <FileUploadCompletion 
+              fileUrl={state.fileUrl} 
+              experisOn={state.expiresOn}
+            />
+          </>)
+          .with({status: 'ERROR'}, data => <>
+            <Text>error - {data.message}</Text>
+          </>)
+          .exhaustive()
+        }
       </Flex>
     </Box>
   </>);
 }
 
-const SelectFile = ({}: {openFilePicker: () => void}) => (<>
-  <input type="file">
-    <Button style={{cursor: 'pointer'}} variant={'surface'}>
-      <Text>pick a file</Text>
-    </Button>
-  </input>
+const Uploading = () => (<>
+  <Flex direction={'column'} justify={'center'} align={'center'} gap={'4'}>
+    <Text>uploading your file</Text>
+    <BarLoader color="#3E63DD" speedMultiplier={0.5} />
+  </Flex>
 </>);
 
-const UploadFileButton = ({upload}: {upload: () => void}) => {
-  return (<>
-    <IconButton onClick={upload} style={{cursor: 'pointer'}} variant={'surface'}>
-      <UploadIcon />
-    </IconButton>
-  </>);
-}
+const FileUploadCompletion = ({fileUrl, experisOn}: {fileUrl: string, experisOn: Date}) => (<>
+  <Flex direction={'column'}>
+    <Text>{fileUrl.toString()}</Text>
+    <Text>{experisOn.toISOString()}</Text>
+  </Flex>
+</>);

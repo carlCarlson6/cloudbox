@@ -9,7 +9,6 @@ const blobServiceClient = new BlobServiceClient(
 
 export const fileShareContainer = blobServiceClient.getContainerClient(env.FILE_SHARE_CONTAINER_NAME);
 
-
 export const generateUploadUrlOnBlobStorage = (
   container: ContainerClient
 ) => async (

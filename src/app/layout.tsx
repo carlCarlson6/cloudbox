@@ -1,16 +1,10 @@
 import { Box, Flex, Heading, Theme } from '@radix-ui/themes';
 import '@radix-ui/themes/styles.css';
-
-import { Inter } from "next/font/google";
-
-const inter = Inter({
-  subsets: ["latin"],
-});
+import '../ui/styles.css'
 
 export const metadata = {
   title: "cloudbox.app",
   description: "share files made easy",
-  icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
 
 export default function RootLayout({
@@ -20,7 +14,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body>
         <Theme>
           <Box p={'4'}>
               <Header />

@@ -2,7 +2,7 @@
 
 import { fileShareContainer, generateUploadUrlOnBlobStorage } from "./infrastructure/azureStorageBlob"
 import { initFileShareUploadAction } from "./fileShare/initFileShareUpload.action"
-import { readFileShateStateOnAzureTable, upsertFileShareStateOnAzureTable } from "./fileShare/fileShareStateRepository"
+import { getFileShareUrlFromAzureBlobStorage, readFileShateStateOnAzureTable, upsertFileShareStateOnAzureTable } from "./fileShare/fileShareRepository"
 import { buildFileShareStatesTableClient, } from "./infrastructure/azureDataTable"
 import { completeFileShareAction } from "./fileShare/completeFileShare.action"
 
@@ -16,4 +16,5 @@ export const initFileShareUpload = initFileShareUploadAction({
 export const completeFileShare = completeFileShareAction(
   readFileShateStateOnAzureTable(buildFileShareStatesTableClient),
   upsertFileShareState,
+  getFileShareUrlFromAzureBlobStorage(fileShareContainer)
 );

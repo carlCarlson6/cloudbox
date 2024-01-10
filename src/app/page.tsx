@@ -1,4 +1,4 @@
-import { UploadFile } from "~/ui/upload/uploadFile";
+import { UploadFile } from "~/ui/upload/UploadFile";
 
 export default async function Home() {
   return (

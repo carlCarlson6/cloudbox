@@ -1,5 +1,5 @@
 import { z } from "zod"
-import type { ReadFileShareState, UpsertFileShareState } from "./fileShareStateRepository";
+import type { GetFileShareUrl, ReadFileShareState, UpsertFileShareState } from "./fileShareRepository";
 
 export const completeFileShareCommandSchema = z.object({
   fileShareId: z.object({
@@ -10,12 +10,12 @@ export const completeFileShareCommandSchema = z.object({
 
 export const completeFileShareAction = (
   read: ReadFileShareState,
-  upsert: UpsertFileShareState
+  upsert: UpsertFileShareState,
+  getUrl: GetFileShareUrl,
 ) => async (
   command: z.infer<typeof completeFileShareCommandSchema>
 ) => {
   const {fileShareId} = await completeFileShareCommandSchema.parseAsync(command);
-  
   const state = await read(fileShareId);
   if (!state) {
     throw new Error("file share not found");
@@ -29,4 +29,9 @@ export const completeFileShareAction = (
     status: 'UPLOADED',
     expiresOn,
   });
+
+  return {
+    fileUrl: await getUrl(state.filePath, expiresOn),
+    expiresOn
+  }
 }

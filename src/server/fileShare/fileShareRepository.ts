@@ -1,3 +1,4 @@
+import { BlobSASPermissions, type ContainerClient } from "@azure/storage-blob";
 import type { BuildTableClient } from "../infrastructure/azureDataTable";
 
 type FileShareStateId = {
@@ -17,7 +18,6 @@ type FileShareState = {
 }
 
 export type UpsertFileShareState = (id: FileShareStateId, status: FileShareState) => Promise<void>;
-export type ReadFileShareState = (id: FileShareStateId) => Promise<FileShareState|undefined>;
 
 export const upsertFileShareStateOnAzureTable = (
   buildTableClient: BuildTableClient
@@ -26,12 +26,14 @@ export const upsertFileShareStateOnAzureTable = (
   status: FileShareState
 ) => {
   const fileSharesTable = await buildTableClient();
-  await fileSharesTable.createEntity({ 
+  await fileSharesTable.upsertEntity({
     partitionKey: id.owner, 
-    rowKey: id.slug, 
-    ...status 
+      rowKey: id.slug, 
+      ...status 
   });
 }
+
+export type ReadFileShareState = (id: FileShareStateId) => Promise<FileShareState|undefined>;
 
 export const readFileShateStateOnAzureTable = (
   buildTableClient: BuildTableClient
@@ -42,3 +44,19 @@ export const readFileShateStateOnAzureTable = (
   const entity = await fileSharesTable.getEntity<FileShareState>(id.owner, id.slug);
   return entity;
 }
+
+export type GetFileShareUrl = (fileSharePath: string, expiresOn: Date) => Promise<string>;
+
+export const getFileShareUrlFromAzureBlobStorage = (
+  container: ContainerClient
+): GetFileShareUrl => (
+  fileSharePath: string,
+  expiresOn: Date
+) => container
+  .getBlobClient(fileSharePath)
+  .generateSasUrl({
+    permissions: BlobSASPermissions.from({
+      read: true,
+    }),
+    expiresOn
+  });
